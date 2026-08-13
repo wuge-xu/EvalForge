@@ -189,3 +189,15 @@ EvalForge 当前使用 SQLAlchemy 2.x 同步 Engine、Psycopg 3 和显式 Sessio
 当前阶段优先保证事务边界、Session 生命周期和领域模型设计清晰，不为了形式上的异步提前引入 AsyncSession。后续如果实际压测证明数据库访问成为并发瓶颈，再评估迁移到异步持久化层。
 
 数据库连接统一通过 Pydantic Settings 配置，并启用 pool_pre_ping 检测失效连接。
+
+## ADR-026：使用 Alembic 管理数据库 Schema
+
+状态：Accepted
+
+PostgreSQL Schema、pgvector 扩展和后续表结构变化统一通过 Alembic migration 管理，不允许依赖人工执行 SQL 维护环境状态。
+
+Alembic 与 API 共用 EvalForge Settings 中的数据库连接配置，不在 alembic.ini 中保存数据库密码。
+
+SQLAlchemy Declarative Base 使用稳定的约束命名规则，降低不同环境自动生成约束名称造成的迁移差异。
+
+ORM Metadata 属于基础设施持久化层，不直接作为领域模型本身。
