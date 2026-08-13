@@ -58,3 +58,18 @@ def test_get_settings_returns_cached_instance() -> None:
     assert first is second
 
     reset_settings_cache()
+
+
+def test_database_settings_can_be_loaded_from_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(
+        "EVALFORGE_DATABASE_URL",
+        "postgresql+psycopg://user:password@db:5432/testdb",
+    )
+    monkeypatch.setenv("EVALFORGE_DATABASE_ECHO", "true")
+
+    settings = Settings(_env_file=None)
+
+    assert settings.database_url == "postgresql+psycopg://user:password@db:5432/testdb"
+    assert settings.database_echo is True

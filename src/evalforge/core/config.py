@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, ge=1, le=65535)
     api_v1_prefix: str = "/api/v1"
 
+    database_url: str = "postgresql+psycopg://evalforge:evalforge_dev@127.0.0.1:55432/evalforge"
+    database_echo: bool = False
+
     log_level: Literal[
         "DEBUG",
         "INFO",

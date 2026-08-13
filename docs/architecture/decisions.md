@@ -179,3 +179,13 @@ Docker 镜像采用 Python 3.12 slim 基础镜像。Builder 阶段负责安装�
 容器内部统一监听 8000 端口，并以 UID 10001 的非 root 用户运行。
 
 镜像内置基于 `/health/ready` 的 Docker HEALTHCHECK。宿主机端口映射由运行环境决定，不要求固定使用 8000。
+
+## ADR-025：持久化层首先采用同步 SQLAlchemy
+
+状态：Accepted
+
+EvalForge 当前使用 SQLAlchemy 2.x 同步 Engine、Psycopg 3 和显式 SessionFactory 访问 PostgreSQL。
+
+当前阶段优先保证事务边界、Session 生命周期和领域模型设计清晰，不为了形式上的异步提前引入 AsyncSession。后续如果实际压测证明数据库访问成为并发瓶颈，再评估迁移到异步持久化层。
+
+数据库连接统一通过 Pydantic Settings 配置，并启用 pool_pre_ping 检测失效连接。
