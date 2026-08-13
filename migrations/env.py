@@ -4,7 +4,7 @@ from alembic import context
 
 from evalforge.core.config import get_settings
 from evalforge.infrastructure.database import create_database_engine
-from evalforge.infrastructure.persistence.base import Base
+from evalforge.infrastructure.persistence import Base
 
 config = context.config
 

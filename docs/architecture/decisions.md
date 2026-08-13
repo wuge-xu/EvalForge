@@ -201,3 +201,17 @@ Alembic 与 API 共用 EvalForge Settings 中的数据库连接配置，不在 a
 SQLAlchemy Declarative Base 使用稳定的约束命名规则，降低不同环境自动生成约束名称造成的迁移差异。
 
 ORM Metadata 属于基础设施持久化层，不直接作为领域模型本身。
+
+## ADR-027：评测数据集采用显式不可变版本层
+
+状态：Accepted
+
+EvalForge 将 Project、Dataset、DatasetVersion、TestCase 建模为明确的层级关系。
+
+Dataset 表示逻辑数据集，DatasetVersion 表示具体、可复现的数据快照。后续 Experiment 必须绑定 DatasetVersion，而不是直接绑定可持续变化的 Dataset，从而保证历史实验结果能够追溯和复现。
+
+DatasetVersion 使用单调正整数 version_number，并通过数据库唯一约束保证同一 Dataset 内版本不可重复。content_hash 用于记录版本内容指纹。
+
+TestCase 属于具体 DatasetVersion，external_id 仅要求在同一版本内唯一；扩展属性使用 PostgreSQL JSONB 保存。
+
+当前阶段使用 UUID 主键、带时区时间戳和数据库级唯一/检查/外键约束。Project 到 TestCase 的生命周期暂时采用 ON DELETE CASCADE；后续 Experiment 开始引用 DatasetVersion 后，将重新评估生产环境删除策略。
