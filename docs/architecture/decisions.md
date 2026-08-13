@@ -215,3 +215,17 @@ DatasetVersion 使用单调正整数 version_number，并通过数据库唯一�
 TestCase 属于具体 DatasetVersion，external_id 仅要求在同一版本内唯一；扩展属性使用 PostgreSQL JSONB 保存。
 
 当前阶段使用 UUID 主键、带时区时间戳和数据库级唯一/检查/外键约束。Project 到 TestCase 的生命周期暂时采用 ON DELETE CASCADE；后续 Experiment 开始引用 DatasetVersion 后，将重新评估生产环境删除策略。
+
+## ADR-028：实验运行数据采用不可变配置快照和受保护的数据引用
+
+状态：Accepted
+
+Experiment 表示一次可复现的评测运行，并固定 project_id、dataset_version_id、config_snapshot 和 config_hash。后续即使 Prompt、Model、RAG 或 Agent 配置继续演进，历史实验仍保留运行时完整配置快照。
+
+Experiment 和 ExperimentCase 对 DatasetVersion、TestCase 使用 ON DELETE RESTRICT，避免已参与历史实验的评测数据被直接删除而破坏可复现性。
+
+ExperimentCase、MetricResult 和 GateResult 属于实验运行结果，其生命周期跟随 Experiment，通过 ON DELETE CASCADE 清理。
+
+MetricResult 区分 experiment 和 case 两种 scope，并通过数据库 Check Constraint 与 PostgreSQL partial unique index保证同一作用域、指标名和 evaluator 不产生重复结果。
+
+Experiment 与 ExperimentCase 的状态、延迟非负、Gate operator 等基础运行时不变量由 PostgreSQL 约束兜底。涉及跨多张表的语义一致性将在后续 application service 层继续校验。
